@@ -1,5 +1,5 @@
 /**
- * Data Analyzer Pro - A powerful Google Sheets add-on
+ * Currency Dashboard - Live exchange rates with frankfurter.app API
  * Built with VS Code + clasp + GitHub (way better than the UI!)
  */
 
@@ -8,22 +8,28 @@
  */
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
-  ui.createMenu('Data Analyzer Pro')
-    .addItem('Launch Dashboard', 'showSidebar')
+  ui.createMenu('Currency Dashboard')
+    .addItem('Refresh Rates', 'fetchCurrencyRates')
+    .addItem('Add Historical Entry', 'addHistoricalEntry')
     .addSeparator()
-    .addItem('Analyze Selection', 'analyzeSelection')
-    .addItem('Auto-Format Data', 'autoFormatData')
-    .addItem('Create Summary Report', 'createSummaryReport')
-    .addSeparator()
-    .addItem('Fetch Currency Rates', 'fetchCurrencyRates')
-    .addItem('Clean Data', 'cleanData')
-    .addItem('Remove Duplicates', 'removeDuplicates')
+    .addItem('Launch Sidebar', 'showSidebar')
+    .addItem('Reset Dashboard', 'setupCurrencyDashboard')
     .addToUi();
   
+  // Auto-setup dashboard on first load
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Currency Dashboard');
+  
+  if (!sheet) {
+    setupCurrencyDashboard();
+  } else {
+    fetchCurrencyRates();
+  }
+  
   SpreadsheetApp.getActiveSpreadsheet().toast(
-    'Data Analyzer Pro loaded! Check the menu above.',
+    'Currency Dashboard ready!',
     'Welcome',
-    5
+    3
   );
 }
 
@@ -32,239 +38,238 @@ function onOpen() {
  */
 function showSidebar() {
   const html = HtmlService.createHtmlOutputFromFile('Sidebar')
-    .setTitle('Data Analyzer Pro')
-    .setWidth(300);
+    .setTitle('Currency Dashboard')
+    .setWidth(320);
   SpreadsheetApp.getUi().showSidebar(html);
 }
 
 /**
- * Analyzes selected data and shows statistics
+ * Sets up the currency dashboard in the sheet
  */
-function analyzeSelection() {
-  const sheet = SpreadsheetApp.getActiveSheet();
-  const range = sheet.getActiveRange();
-  const values = range.getValues();
+function setupCurrencyDashboard() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName('Currency Dashboard');
   
-  // Flatten and filter numeric values
-  const numbers = values.flat().filter(val => typeof val === 'number' && !isNaN(val));
-  
-  if (numbers.length === 0) {
-    SpreadsheetApp.getUi().alert('No numeric data found in selection!');
-    return;
+  // Create or clear dashboard sheet
+  if (!sheet) {
+    sheet = ss.insertSheet('Currency Dashboard');
+  } else {
+    sheet.clear();
   }
   
-  // Calculate statistics
-  const sum = numbers.reduce((a, b) => a + b, 0);
-  const avg = sum / numbers.length;
-  const min = Math.min(...numbers);
-  const max = Math.max(...numbers);
-  const sorted = numbers.sort((a, b) => a - b);
-  const median = sorted.length % 2 === 0 
-    ? (sorted[sorted.length/2 - 1] + sorted[sorted.length/2]) / 2 
-    : sorted[Math.floor(sorted.length/2)];
-  
-  // Show results
-  const message = `Data Analysis Results\n\n` +
-    `Count: ${numbers.length}\n` +
-    `Sum: ${sum.toFixed(2)}\n` +
-    `Average: ${avg.toFixed(2)}\n` +
-    `Median: ${median.toFixed(2)}\n` +
-    `Min: ${min.toFixed(2)}\n` +
-    `Max: ${max.toFixed(2)}\n` +
-    `Range: ${(max - min).toFixed(2)}`;
-  
-  SpreadsheetApp.getUi().alert('Analysis Complete', message, SpreadsheetApp.getUi().ButtonSet.OK);
-}
-
-/**
- * Auto-formats the selected data range with professional styling
- */
-function autoFormatData() {
-  const sheet = SpreadsheetApp.getActiveSheet();
-  const range = sheet.getActiveRange();
-  
-  // Header row styling
-  const headerRow = range.offset(0, 0, 1, range.getNumColumns());
-  headerRow.setBackground('#4285F4')
-    .setFontColor('#FFFFFF')
+  // HEADER SECTION
+  sheet.getRange('A1:H1').merge()
+    .setValue('LIVE EXCHANGE RATES')
+    .setFontSize(24)
     .setFontWeight('bold')
+    .setBackground('#4285F4')
+    .setFontColor('#FFFFFF')
+    .setHorizontalAlignment('center')
+    .setVerticalAlignment('middle');
+  sheet.setRowHeight(1, 45);
+  
+  // CURRENT RATES SECTION
+  sheet.getRange('A2:H2').merge()
+    .setValue('Major Currency Pairs vs EUR')
+    .setFontSize(16)
+    .setFontWeight('bold')
+    .setBackground('#34A853')
+    .setFontColor('#FFFFFF')
     .setHorizontalAlignment('center');
   
-  // Data rows - alternating colors
-  if (range.getNumRows() > 1) {
-    for (let i = 1; i < range.getNumRows(); i++) {
-      const row = range.offset(i, 0, 1, range.getNumColumns());
-      row.setBackground(i % 2 === 0 ? '#F8F9FA' : '#FFFFFF');
+  // Currency pair headers
+  const currencies = ['USD', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD'];
+  sheet.getRange('A3').setValue('Currency').setFontWeight('bold');
+  sheet.getRange('B3').setValue('Rate').setFontWeight('bold');
+  sheet.getRange('C3').setValue('Updated').setFontWeight('bold');
+  sheet.getRange('A3:C3')
+    .setBackground('#E8F0FE')
+    .setHorizontalAlignment('center');
+  
+  // Set up currency rows
+  for (let i = 0; i < currencies.length; i++) {
+    const row = 4 + i;
+    sheet.getRange(row, 1).setValue(currencies[i]);
+    sheet.getRange(row, 2).setNumberFormat('0.0000');
+    
+    // Alternating colors
+    if (i % 2 === 0) {
+      sheet.getRange(row, 1, 1, 3).setBackground('#F8F9FA');
     }
   }
   
-  // Add borders
-  range.setBorder(true, true, true, true, true, true, '#000000', SpreadsheetApp.BorderStyle.SOLID);
-  
-  // Auto-resize columns
-  for (let i = 1; i <= range.getNumColumns(); i++) {
-    sheet.autoResizeColumn(range.getColumn() + i - 1);
-  }
-  
-  SpreadsheetApp.getActiveSpreadsheet().toast('Data formatted successfully!', 'Success', 3);
-}
-
-/**
- * Creates a summary report in a new sheet
- */
-function createSummaryReport() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sourceSheet = ss.getActiveSheet();
-  const data = sourceSheet.getDataRange().getValues();
-  
-  if (data.length < 2) {
-    SpreadsheetApp.getUi().alert('Need at least a header row and one data row!');
-    return;
-  }
-  
-  // Create new sheet
-  const reportSheet = ss.insertSheet('Summary Report - ' + new Date().toLocaleDateString());
-  
-  // Add title
-  reportSheet.getRange('A1').setValue('SUMMARY REPORT')
+  // CONVERTER SECTION
+  sheet.getRange('E3:H3').merge()
+    .setValue('Quick Converter')
     .setFontSize(16)
     .setFontWeight('bold')
-    .setBackground('#4285F4')
-    .setFontColor('#FFFFFF');
-  reportSheet.getRange('A1:D1').merge();
+    .setBackground('#FBBC04')
+    .setFontColor('#000000')
+    .setHorizontalAlignment('center');
   
-  // Add metadata
-  reportSheet.getRange('A3').setValue('Source Sheet:').setFontWeight('bold');
-  reportSheet.getRange('B3').setValue(sourceSheet.getName());
-  reportSheet.getRange('A4').setValue('Generated:').setFontWeight('bold');
-  reportSheet.getRange('B4').setValue(new Date());
-  reportSheet.getRange('A5').setValue('Total Rows:').setFontWeight('bold');
-  reportSheet.getRange('B5').setValue(data.length - 1);
+  sheet.getRange('E4').setValue('Amount:');
+  sheet.getRange('F4').setValue(1000).setNumberFormat('#,##0');
   
-  // Column analysis
-  reportSheet.getRange('A7').setValue('Column Statistics')
-    .setFontSize(14)
-    .setFontWeight('bold')
-    .setBackground('#34A853')
-    .setFontColor('#FFFFFF');
-  reportSheet.getRange('A7:D7').merge();
+  sheet.getRange('E5').setValue('From:');
+  const fromCell = sheet.getRange('F5');
+  fromCell.setValue('EUR');
+  const allCurrencies = ['EUR', 'USD', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD'];
+  const fromRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(allCurrencies, true)
+    .setAllowInvalid(false)
+    .build();
+  fromCell.setDataValidation(fromRule);
+  fromCell.setBackground('#FFFEF0').setFontWeight('bold').setHorizontalAlignment('center');
   
-  reportSheet.getRange('A8:D8')
-    .setValues([['Column', 'Type', 'Unique Values', 'Empty Cells']])
-    .setBackground('#E8F0FE')
-    .setFontWeight('bold');
+  sheet.getRange('E6').setValue('To:');
   
-  const headers = data[0];
-  let row = 9;
-  
-  for (let col = 0; col < headers.length; col++) {
-    const columnData = data.slice(1).map(r => r[col]);
-    const uniqueValues = new Set(columnData.filter(v => v !== '')).size;
-    const emptyCells = columnData.filter(v => v === '').length;
-    const type = typeof columnData.find(v => v !== '');
-    
-    reportSheet.getRange(row, 1, 1, 4).setValues([[
-      headers[col],
-      type,
-      uniqueValues,
-      emptyCells
-    ]]);
-    row++;
+  const converterCurrencies = ['USD', 'GBP', 'JPY', 'CHF'];
+  for (let i = 0; i < converterCurrencies.length; i++) {
+    const row = 7 + i;
+    sheet.getRange(row, 5).setValue(converterCurrencies[i] + ':');
+    sheet.getRange(row, 6).setFormula(`=CONVERTCURRENCY(F4,F5,"${converterCurrencies[i]}")`);
+    sheet.getRange(row, 6).setNumberFormat('#,##0.00');
+    sheet.getRange(row, 5, 1, 2)
+      .setBackground('#FFFEF0')
+      .setFontWeight('bold');
   }
   
-  // Auto-resize
-  reportSheet.autoResizeColumns(1, 4);
+  // HISTORICAL DATA SECTION
+  sheet.getRange('A12:H12').merge()
+    .setValue('Rate History')
+    .setFontSize(16)
+    .setFontWeight('bold')
+    .setBackground('#34A853')
+    .setFontColor('#FFFFFF')
+    .setHorizontalAlignment('center');
   
-  // Activate the new sheet
-  ss.setActiveSheet(reportSheet);
+  sheet.getRange('A13:F13')
+    .setValues([['Date', 'USD', 'GBP', 'JPY', 'CHF', 'CAD']])
+    .setBackground('#E8F0FE')
+    .setFontWeight('bold')
+    .setHorizontalAlignment('center');
+  
+  // Column widths
+  sheet.setColumnWidth(1, 140);
+  sheet.setColumnWidth(2, 100);
+  sheet.setColumnWidth(3, 120);
+  sheet.setColumnWidth(4, 30);
+  sheet.setColumnWidth(5, 100);
+  sheet.setColumnWidth(6, 120);
+  sheet.setColumnWidth(7, 100);
+  sheet.setColumnWidth(8, 100);
+  
+  // Freeze headers
+  sheet.setFrozenRows(13);
+  
+  // Borders
+  sheet.getRange('A4:C10').setBorder(true, true, true, true, true, true);
+  sheet.getRange('E4:F9').setBorder(true, true, true, true, true, true);
+  
+  // Activate the dashboard
+  ss.setActiveSheet(sheet);
+  
+  // Fetch initial data
+  fetchCurrencyRates();
   
   SpreadsheetApp.getActiveSpreadsheet().toast(
-    'Summary report created!',
-    'Success',
+    'Dashboard ready! Use menu: Currency Dashboard > Refresh Rates',
+    'Setup Complete',
     3
   );
 }
 
 /**
- * Cleans data by trimming whitespace and removing empty rows
+ * Fetches current exchange rates from frankfurter.app API (free, unlimited)
  */
-function cleanData() {
-  const sheet = SpreadsheetApp.getActiveSheet();
-  const range = sheet.getActiveRange();
-  const values = range.getValues();
+function fetchCurrencyRates() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName('Currency Dashboard');
   
-  let cleanedRows = 0;
-  let trimmedCells = 0;
-  
-  // Clean the data
-  const cleanedData = values.map(row => {
-    const isEmptyRow = row.every(cell => cell === '' || cell === null);
-    if (isEmptyRow && row.length > 0) {
-      cleanedRows++;
-      return null; // Mark for removal
-    }
-    
-    return row.map(cell => {
-      if (typeof cell === 'string') {
-        const trimmed = cell.trim();
-        if (trimmed !== cell) trimmedCells++;
-        return trimmed;
-      }
-      return cell;
-    });
-  }).filter(row => row !== null);
-  
-  // Update the range
-  if (cleanedData.length > 0) {
-    range.clearContent();
-    sheet.getRange(range.getRow(), range.getColumn(), cleanedData.length, cleanedData[0].length)
-      .setValues(cleanedData);
-  }
-  
-  SpreadsheetApp.getActiveSpreadsheet().toast(
-    `Cleaned ${trimmedCells} cells and removed ${cleanedRows} empty rows!`,
-    'Data Cleaned',
-    4
-  );
-}
-
-/**
- * Removes duplicate rows from the selection
- */
-function removeDuplicates() {
-  const sheet = SpreadsheetApp.getActiveSheet();
-  const range = sheet.getActiveRange();
-  const values = range.getValues();
-  
-  // Track unique rows
-  const seen = new Set();
-  const uniqueRows = [];
-  let duplicateCount = 0;
-  
-  values.forEach(row => {
-    const key = JSON.stringify(row);
-    if (!seen.has(key)) {
-      seen.add(key);
-      uniqueRows.push(row);
-    } else {
-      duplicateCount++;
-    }
-  });
-  
-  if (duplicateCount === 0) {
-    SpreadsheetApp.getUi().alert('No duplicates found!');
+  if (!sheet) {
+    setupCurrencyDashboard();
     return;
   }
   
-  // Update the range
-  range.clearContent();
-  sheet.getRange(range.getRow(), range.getColumn(), uniqueRows.length, uniqueRows[0].length)
-    .setValues(uniqueRows);
+  try {
+    // Frankfurter.app - Free, unlimited, no API key needed!
+    const response = UrlFetchApp.fetch('https://api.frankfurter.app/latest?from=EUR');
+    const data = JSON.parse(response.getContentText());
+    
+    const timestamp = new Date();
+    const currencies = ['USD', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD'];
+    
+    // Update current rates
+    for (let i = 0; i < currencies.length; i++) {
+      const row = 4 + i;
+      const rate = data.rates[currencies[i]];
+      sheet.getRange(row, 2).setValue(rate);
+      sheet.getRange(row, 3).setValue(timestamp).setNumberFormat('hh:mm:ss');
+    }
+    
+    SpreadsheetApp.getActiveSpreadsheet().toast(
+      'Rates updated successfully!',
+      'Success',
+      2
+    );
+    
+  } catch (error) {
+    SpreadsheetApp.getActiveSpreadsheet().toast(
+      'Error fetching rates: ' + error.message,
+      'Error',
+      3
+    );
+  }
+}
+
+/**
+ * Adds current rates to historical data
+ */
+function addHistoricalEntry() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Currency Dashboard');
+  
+  if (!sheet) {
+    setupCurrencyDashboard();
+    return;
+  }
+  
+  const timestamp = new Date();
+  
+  // Get current rates
+  const usd = sheet.getRange('B5').getValue();
+  const gbp = sheet.getRange('B6').getValue();
+  const jpy = sheet.getRange('B7').getValue();
+  const chf = sheet.getRange('B8').getValue();
+  const cad = sheet.getRange('B9').getValue();
+  
+  // Find next empty row in history
+  const lastRow = sheet.getLastRow();
+  const nextRow = Math.max(14, lastRow + 1);
+  
+  // Add entry
+  sheet.getRange(nextRow, 1, 1, 6).setValues([[
+    timestamp,
+    usd,
+    gbp,
+    jpy,
+    chf,
+    cad
+  ]]);
+  
+  // Format
+  sheet.getRange(nextRow, 1).setNumberFormat('yyyy-mm-dd hh:mm');
+  sheet.getRange(nextRow, 2, 1, 5).setNumberFormat('0.0000');
+  
+  // Alternate row colors
+  if (nextRow % 2 === 0) {
+    sheet.getRange(nextRow, 1, 1, 6).setBackground('#F8F9FA');
+  }
   
   SpreadsheetApp.getActiveSpreadsheet().toast(
-    `Removed ${duplicateCount} duplicate rows!`,
+    'Snapshot added to history',
     'Success',
-    4
+    2
   );
 }
 
@@ -273,58 +278,25 @@ function removeDuplicates() {
  */
 function getSheetInfo() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getActiveSheet();
-  const range = sheet.getDataRange();
+  const sheet = ss.getSheetByName('Currency Dashboard');
+  
+  if (!sheet) {
+    return {
+      sheetName: 'No Dashboard',
+      usd: 0,
+      gbp: 0,
+      jpy: 0,
+      lastUpdate: 'N/A'
+    };
+  }
   
   return {
     sheetName: sheet.getName(),
-    totalSheets: ss.getSheets().length,
-    rows: range.getNumRows(),
-    columns: range.getNumColumns(),
-    lastModified: ss.getLastUpdated()
+    usd: sheet.getRange('B5').getValue() || 0,
+    gbp: sheet.getRange('B6').getValue() || 0,
+    jpy: sheet.getRange('B7').getValue() || 0,
+    lastUpdate: sheet.getRange('C5').getValue() || 'Never'
   };
-}
-
-/**
- * Fetches current currency exchange rates - Perfect for poker earnings tracking!
- * Uses exchangerate-api.com free tier
- */
-function fetchCurrencyRates() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getActiveSheet();
-  
-  try {
-    // Fetch EUR, GBP, USD rates (common for poker tournaments)
-    const response = UrlFetchApp.fetch('https://api.exchangerate-api.com/v4/latest/USD');
-    const data = JSON.parse(response.getContentText());
-    
-    // Create header if needed
-    sheet.getRange('A1:D1').setValues([['Currency', 'Rate to USD', 'Last Updated', 'Provider']]);
-    sheet.getRange('A1:D1').setBackground('#4285F4').setFontColor('#FFFFFF').setFontWeight('bold');
-    
-    // Insert data
-    const currencies = ['EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'CHF', 'MXN', 'BRL'];
-    const timestamp = new Date(data.time_last_updated * 1000);
-    
-    const rows = currencies.map(curr => [
-      curr,
-      data.rates[curr],
-      timestamp,
-      'exchangerate-api.com'
-    ]);
-    
-    sheet.getRange(2, 1, rows.length, 4).setValues(rows);
-    sheet.autoResizeColumns(1, 4);
-    
-    SpreadsheetApp.getActiveSpreadsheet().toast(
-      `Fetched ${currencies.length} currency rates successfully!`,
-      'API Success',
-      4
-    );
-    
-  } catch (error) {
-    SpreadsheetApp.getUi().alert('API Error: ' + error.message);
-  }
 }
 
 /**
@@ -332,17 +304,18 @@ function fetchCurrencyRates() {
  */
 function getLiveCurrencyRates() {
   try {
-    const response = UrlFetchApp.fetch('https://api.exchangerate-api.com/v4/latest/USD');
+    const response = UrlFetchApp.fetch('https://api.frankfurter.app/latest?from=EUR');
     const data = JSON.parse(response.getContentText());
     
     return {
       success: true,
       rates: {
-        EUR: data.rates.EUR,
+        USD: data.rates.USD,
         GBP: data.rates.GBP,
-        CAD: data.rates.CAD
+        JPY: data.rates.JPY,
+        CHF: data.rates.CHF
       },
-      lastUpdate: new Date(data.time_last_updated * 1000).toLocaleString()
+      lastUpdate: new Date().toLocaleString()
     };
   } catch (error) {
     return {

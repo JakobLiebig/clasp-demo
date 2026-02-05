@@ -20,41 +20,64 @@
       background: white;
       border-radius: 12px;
       padding: 20px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
     
     h2 {
       color: #4285F4;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
       font-size: 24px;
       text-align: center;
     }
     
-    .info-card {
-      background: #F8F9FA;
-      border-left: 4px solid #4285F4;
-      padding: 12px;
-      margin-bottom: 16px;
-      border-radius: 4px;
+    .rate-card {
+      background: linear-gradient(135deg, #4285F4 0%, #34A853 100%);
+      color: white;
+      padding: 16px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: transform 0.2s;
     }
     
-    .currency-card {
-      background: #E8F5E9;
-      border-left: 4px solid #34A853;
+    .rate-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    }
+    
+    .rate-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .currency-code {
+      font-size: 20px;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    
+    .rate-value {
+      font-size: 28px;
+      font-weight: bold;
+      font-family: 'Courier New', monospace;
+      text-align: center;
+    }
+    
+    .info-section {
+      background: #F8F9FA;
       padding: 12px;
-      margin-bottom: 16px;
-      border-radius: 4px;
+      border-radius: 8px;
+      margin: 16px 0;
+      border-left: 4px solid #4285F4;
     }
     
     .info-row {
       display: flex;
       justify-content: space-between;
       padding: 6px 0;
-      border-bottom: 1px solid #E8EAED;
-    }
-    
-    .info-row:last-child {
-      border-bottom: none;
+      font-size: 14px;
     }
     
     .info-label {
@@ -68,10 +91,12 @@
     }
     
     .section-title {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
       margin: 20px 0 12px 0;
-      color: #202124;
+      color: #5F6368;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     
     .btn {
@@ -79,11 +104,12 @@
       padding: 12px;
       margin: 8px 0;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     
     .btn-primary {
@@ -94,7 +120,7 @@
     .btn-primary:hover {
       background: #3367D6;
       transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(66, 133, 244, 0.3);
+      box-shadow: 0 4px 12px rgba(66, 133, 244, 0.4);
     }
     
     .btn-success {
@@ -105,29 +131,7 @@
     .btn-success:hover {
       background: #2D8E47;
       transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(52, 168, 83, 0.3);
-    }
-    
-    .btn-warning {
-      background: #FBBC04;
-      color: #202124;
-    }
-    
-    .btn-warning:hover {
-      background: #F9AB00;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(251, 188, 4, 0.3);
-    }
-    
-    .btn-danger {
-      background: #EA4335;
-      color: white;
-    }
-    
-    .btn-danger:hover {
-      background: #D33B2C;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(234, 67, 53, 0.3);
+      box-shadow: 0 4px 12px rgba(52, 168, 83, 0.4);
     }
     
     .status-message {
@@ -136,7 +140,14 @@
       border-radius: 6px;
       text-align: center;
       font-weight: 500;
+      font-size: 13px;
       display: none;
+      animation: fadeIn 0.3s;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     
     .status-success {
@@ -145,210 +156,137 @@
       border: 1px solid #C3E6CB;
     }
     
-    .status-error {
-      background: #F8D7DA;
-      color: #721C24;
-      border: 1px solid #F5C6CB;
-    }
-    
-    .loading {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border: 3px solid rgba(255,255,255,.3);
-      border-radius: 50%;
-      border-top-color: white;
-      animation: spin 1s ease-in-out infinite;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
     .footer {
       margin-top: 24px;
       text-align: center;
-      font-size: 12px;
+      font-size: 11px;
       color: #5F6368;
       padding-top: 16px;
       border-top: 1px solid #E8EAED;
     }
     
-    .rate-value {
-      font-family: 'Courier New', monospace;
-      font-weight: bold;
-      color: #34A853;
+    .last-update {
+      font-size: 12px;
+      text-align: center;
+      color: #5F6368;
+      margin-top: 12px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Data Analyzer Pro</h2>
+    <h2>Currency Dashboard</h2>
     
-    <div class="info-card" id="sheetInfo">
+    <div class="rate-card">
+      <div class="rate-header">
+        <span class="currency-code">EUR → USD</span>
+      </div>
+      <div class="rate-value" id="rateUSD">Loading...</div>
+    </div>
+    
+    <div class="rate-card" style="background: linear-gradient(135deg, #34A853 0%, #FBBC04 100%);">
+      <div class="rate-header">
+        <span class="currency-code">EUR → GBP</span>
+      </div>
+      <div class="rate-value" id="rateGBP">Loading...</div>
+    </div>
+    
+    <div class="rate-card" style="background: linear-gradient(135deg, #FBBC04 0%, #EA4335 100%);">
+      <div class="rate-header">
+        <span class="currency-code">EUR → JPY</span>
+      </div>
+      <div class="rate-value" id="rateJPY">Loading...</div>
+    </div>
+    
+    <div class="info-section">
       <div class="info-row">
-        <span class="info-label">Sheet:</span>
+        <span class="info-label">Dashboard:</span>
         <span class="info-value" id="sheetName">Loading...</span>
       </div>
       <div class="info-row">
-        <span class="info-label">Rows:</span>
-        <span class="info-value" id="rows">-</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">Columns:</span>
-        <span class="info-value" id="columns">-</span>
+        <span class="info-label">Source:</span>
+        <span class="info-value">Frankfurter API</span>
       </div>
     </div>
     
-    <div class="currency-card" id="currencyInfo">
-      <div class="section-title">Live Exchange Rates</div>
-      <div class="info-row">
-        <span class="info-label">USD to EUR:</span>
-        <span class="rate-value" id="rateEUR">Loading...</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">USD to GBP:</span>
-        <span class="rate-value" id="rateGBP">Loading...</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">USD to CAD:</span>
-        <span class="rate-value" id="rateCAD">Loading...</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">Updated:</span>
-        <span class="info-value" id="rateUpdate">-</span>
-      </div>
-    </div>
+    <div class="last-update" id="lastUpdate">Last update: -</div>
     
     <div id="statusMessage" class="status-message"></div>
     
     <div class="section-title">Quick Actions</div>
     
-    <button class="btn btn-primary" onclick="runAnalyze()">
-      Analyze Selection
+    <button class="btn btn-primary" onclick="runRefresh()">
+      Refresh Rates
     </button>
     
-    <button class="btn btn-success" onclick="runFormat()">
-      Auto-Format Data
-    </button>
-    
-    <button class="btn btn-success" onclick="runFetchCurrency()">
-      Fetch Currency Rates
-    </button>
-    
-    <button class="btn btn-warning" onclick="runClean()">
-      Clean Data
-    </button>
-    
-    <button class="btn btn-danger" onclick="runRemoveDuplicates()">
-      Remove Duplicates
-    </button>
-    
-    <div class="section-title">Reports</div>
-    
-    <button class="btn btn-primary" onclick="runSummary()">
-      Create Summary Report
+    <button class="btn btn-success" onclick="runAddEntry()">
+      Add to History
     </button>
     
     <div class="footer">
       <strong>Built with VS Code + clasp</strong><br>
-      Version controlled with Git
+      Free unlimited API • No keys needed
     </div>
   </div>
   
   <script>
-    // Load sheet info on startup
+    // Load dashboard info on startup
     google.script.run
-      .withSuccessHandler(updateSheetInfo)
+      .withSuccessHandler(updateDashboardInfo)
       .getSheetInfo();
     
-    // Load currency rates
+    // Load live rates
     google.script.run
-      .withSuccessHandler(updateCurrencyRates)
+      .withSuccessHandler(updateRates)
       .getLiveCurrencyRates();
     
-    function updateSheetInfo(info) {
+    function updateDashboardInfo(info) {
       document.getElementById('sheetName').textContent = info.sheetName;
-      document.getElementById('rows').textContent = info.rows.toLocaleString();
-      document.getElementById('columns').textContent = info.columns.toLocaleString();
-    }
-    
-    function updateCurrencyRates(data) {
-      if (data.success) {
-        document.getElementById('rateEUR').textContent = data.rates.EUR.toFixed(4);
-        document.getElementById('rateGBP').textContent = data.rates.GBP.toFixed(4);
-        document.getElementById('rateCAD').textContent = data.rates.CAD.toFixed(4);
-        document.getElementById('rateUpdate').textContent = data.lastUpdate;
-      } else {
-        document.getElementById('rateEUR').textContent = 'Error';
-        document.getElementById('rateGBP').textContent = 'Error';
-        document.getElementById('rateCAD').textContent = 'Error';
+      
+      if (info.usd > 0) {
+        document.getElementById('rateUSD').textContent = info.usd.toFixed(4);
+        document.getElementById('rateGBP').textContent = info.gbp.toFixed(4);
+        document.getElementById('rateJPY').textContent = info.jpy.toFixed(2);
+        document.getElementById('lastUpdate').textContent = 
+          'Last update: ' + new Date(info.lastUpdate).toLocaleTimeString();
       }
     }
     
-    function showStatus(message, isError = false) {
+    function updateRates(data) {
+      if (data.success) {
+        document.getElementById('rateUSD').textContent = data.rates.USD.toFixed(4);
+        document.getElementById('rateGBP').textContent = data.rates.GBP.toFixed(4);
+        document.getElementById('rateJPY').textContent = data.rates.JPY.toFixed(2);
+        document.getElementById('lastUpdate').textContent = 'Last update: ' + data.lastUpdate;
+      }
+    }
+    
+    function showStatus(message) {
       const statusEl = document.getElementById('statusMessage');
       statusEl.textContent = message;
-      statusEl.className = 'status-message ' + (isError ? 'status-error' : 'status-success');
+      statusEl.className = 'status-message status-success';
       statusEl.style.display = 'block';
       
       setTimeout(() => {
         statusEl.style.display = 'none';
-      }, 3000);
+      }, 2500);
     }
     
-    function runAnalyze() {
-      google.script.run
-        .withSuccessHandler(() => showStatus('Analysis complete!'))
-        .withFailureHandler((error) => showStatus(error, true))
-        .analyzeSelection();
-    }
-    
-    function runFormat() {
+    function runRefresh() {
+      showStatus('Fetching live rates...');
       google.script.run
         .withSuccessHandler(() => {
-          showStatus('Data formatted!');
-          google.script.run.withSuccessHandler(updateSheetInfo).getSheetInfo();
+          showStatus('Rates updated!');
+          google.script.run.withSuccessHandler(updateDashboardInfo).getSheetInfo();
+          google.script.run.withSuccessHandler(updateRates).getLiveCurrencyRates();
         })
-        .withFailureHandler((error) => showStatus(error, true))
-        .autoFormatData();
-    }
-    
-    function runFetchCurrency() {
-      google.script.run
-        .withSuccessHandler(() => {
-          showStatus('Currency rates fetched!');
-          google.script.run.withSuccessHandler(updateCurrencyRates).getLiveCurrencyRates();
-        })
-        .withFailureHandler((error) => showStatus(error, true))
         .fetchCurrencyRates();
     }
     
-    function runClean() {
+    function runAddEntry() {
       google.script.run
-        .withSuccessHandler(() => {
-          showStatus('Data cleaned!');
-          google.script.run.withSuccessHandler(updateSheetInfo).getSheetInfo();
-        })
-        .withFailureHandler((error) => showStatus(error, true))
-        .cleanData();
-    }
-    
-    function runRemoveDuplicates() {
-      google.script.run
-        .withSuccessHandler(() => {
-          showStatus('Duplicates removed!');
-          google.script.run.withSuccessHandler(updateSheetInfo).getSheetInfo();
-        })
-        .withFailureHandler((error) => showStatus(error, true))
-        .removeDuplicates();
-    }
-    
-    function runSummary() {
-      google.script.run
-        .withSuccessHandler(() => showStatus('Summary created!'))
-        .withFailureHandler((error) => showStatus(error, true))
-        .createSummaryReport();
+        .withSuccessHandler(() => showStatus('Added to history!'))
+        .addHistoricalEntry();
     }
   </script>
 </body>
