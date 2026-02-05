@@ -10,6 +10,7 @@ function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('Currency Dashboard')
     .addItem('Refresh Rates', 'fetchCurrencyRates')
+    .addItem('Update Converter', 'updateConverter')
     .addItem('Add Historical Entry', 'addHistoricalEntry')
     .addSeparator()
     .addItem('Launch Sidebar', 'showSidebar')
@@ -121,13 +122,13 @@ function setupCurrencyDashboard() {
   fromCell.setDataValidation(fromRule);
   fromCell.setBackground('#FFFEF0').setFontWeight('bold').setHorizontalAlignment('center');
   
-  sheet.getRange('E6').setValue('To:');
+  sheet.getRange('E6').setValue('Converts to:');
   
   const converterCurrencies = ['USD', 'GBP', 'JPY', 'CHF'];
   for (let i = 0; i < converterCurrencies.length; i++) {
     const row = 7 + i;
     sheet.getRange(row, 5).setValue(converterCurrencies[i] + ':');
-    sheet.getRange(row, 6).setFormula(`=CONVERTCURRENCY(F4,F5,"${converterCurrencies[i]}")`);
+    sheet.getRange(row, 6).setValue('Loading...');
     sheet.getRange(row, 6).setNumberFormat('#,##0.00');
     sheet.getRange(row, 5, 1, 2)
       .setBackground('#FFFEF0')
@@ -164,7 +165,7 @@ function setupCurrencyDashboard() {
   
   // Borders
   sheet.getRange('A4:C10').setBorder(true, true, true, true, true, true);
-  sheet.getRange('E4:F9').setBorder(true, true, true, true, true, true);
+  sheet.getRange('E4:F10').setBorder(true, true, true, true, true, true);
   
   // Activate the dashboard
   ss.setActiveSheet(sheet);
@@ -172,11 +173,98 @@ function setupCurrencyDashboard() {
   // Fetch initial data
   fetchCurrencyRates();
   
+  // Update converter
+  updateConverter();
+  
   SpreadsheetApp.getActiveSpreadsheet().toast(
     'Dashboard ready! Use menu: Currency Dashboard > Refresh Rates',
     'Setup Complete',
     3
   );
+}
+
+/**
+ * Updates the converter calculations based on selected currency
+ */
+function updateConverter() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Currency Dashboard');
+  
+  if (!sheet) return;
+  
+  const amountValue = sheet.getRange('F4').getValue();
+  const fromCurrency = sheet.getRange('F5').getValue();
+  
+  // Convert amount to number
+  const amount = Number(amountValue);
+  
+  // Check if amount is valid
+  if (amountValue === '' || amountValue === null || isNaN(amount) || amount <= 0) {
+    for (let i = 0; i < 4; i++) {
+      sheet.getRange(7 + i, 6).setValue('-');
+    }
+    return;
+  }
+  
+  // Check if currency is valid
+  if (!fromCurrency || fromCurrency === '' || fromCurrency === null) {
+    for (let i = 0; i < 4; i++) {
+      sheet.getRange(7 + i, 6).setValue('-');
+    }
+    return;
+  }
+  
+  // Get rates from table (all are vs EUR)
+  const rates = {
+    'EUR': 1,
+    'USD': sheet.getRange('B4').getValue() || 0,
+    'GBP': sheet.getRange('B5').getValue() || 0,
+    'JPY': sheet.getRange('B6').getValue() || 0,
+    'CHF': sheet.getRange('B7').getValue() || 0,
+    'CAD': sheet.getRange('B8').getValue() || 0,
+    'AUD': sheet.getRange('B9').getValue() || 0
+  };
+  
+  const targetCurrencies = ['USD', 'GBP', 'JPY', 'CHF'];
+  const fromRate = rates[fromCurrency];
+  
+  if (!fromRate || fromRate === 0) {
+    for (let i = 0; i < 4; i++) {
+      sheet.getRange(7 + i, 6).setValue('-');
+    }
+    return;
+  }
+  
+  for (let i = 0; i < targetCurrencies.length; i++) {
+    const toCurrency = targetCurrencies[i];
+    const toRate = rates[toCurrency];
+    const row = 7 + i;
+    
+    if (fromCurrency === toCurrency) {
+      sheet.getRange(row, 6).setValue(amount);
+    } else if (toRate && toRate !== 0) {
+      // Convert: amount in FROM currency → EUR → TO currency
+      const converted = (amount / fromRate) * toRate;
+      sheet.getRange(row, 6).setValue(converted);
+    } else {
+      sheet.getRange(row, 6).setValue('-');
+    }
+  }
+}
+
+/**
+ * Triggered when user edits a cell - auto-updates converter
+ */
+function onEdit(e) {
+  const range = e.range;
+  const sheet = range.getSheet();
+  
+  // Auto-update converter when amount or currency changes
+  if (sheet.getName() === 'Currency Dashboard' && 
+      range.getColumn() === 6 && 
+      (range.getRow() === 4 || range.getRow() === 5)) {
+    updateConverter();
+  }
 }
 
 /**
