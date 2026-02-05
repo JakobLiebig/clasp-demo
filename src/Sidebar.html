@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+    
+    h2 {
+      color: #4285F4;
+      margin-bottom: 16px;
+      font-size: 24px;
+      text-align: center;
+    }
+    
+    .info-card {
+      background: #F8F9FA;
+      border-left: 4px solid #4285F4;
+      padding: 12px;
+      margin-bottom: 16px;
+      border-radius: 4px;
+    }
+    
+    .currency-card {
+      background: #E8F5E9;
+      border-left: 4px solid #34A853;
+      padding: 12px;
+      margin-bottom: 16px;
+      border-radius: 4px;
+    }
+    
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #E8EAED;
+    }
+    
+    .info-row:last-child {
+      border-bottom: none;
+    }
+    
+    .info-label {
+      font-weight: 600;
+      color: #5F6368;
+    }
+    
+    .info-value {
+      color: #202124;
+      font-weight: 500;
+    }
+    
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 20px 0 12px 0;
+      color: #202124;
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+      background: #4285F4;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #3367D6;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(66, 133, 244, 0.3);
+    }
+    
+    .btn-success {
+      background: #34A853;
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background: #2D8E47;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(52, 168, 83, 0.3);
+    }
+    
+    .btn-warning {
+      background: #FBBC04;
+      color: #202124;
+    }
+    
+    .btn-warning:hover {
+      background: #F9AB00;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(251, 188, 4, 0.3);
+    }
+    
+    .btn-danger {
+      background: #EA4335;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #D33B2C;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(234, 67, 53, 0.3);
+    }
+    
+    .status-message {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+      text-align: center;
+      font-weight: 500;
+      display: none;
+    }
+    
+    .status-success {
+      background: #D4EDDA;
+      color: #155724;
+      border: 1px solid #C3E6CB;
+    }
+    
+    .status-error {
+      background: #F8D7DA;
+      color: #721C24;
+      border: 1px solid #F5C6CB;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .footer {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: #5F6368;
+      padding-top: 16px;
+      border-top: 1px solid #E8EAED;
+    }
+    
+    .rate-value {
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      color: #34A853;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Data Analyzer Pro</h2>
+    
+    <div class="info-card" id="sheetInfo">
+      <div class="info-row">
+        <span class="info-label">Sheet:</span>
+        <span class="info-value" id="sheetName">Loading...</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Rows:</span>
+        <span class="info-value" id="rows">-</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Columns:</span>
+        <span class="info-value" id="columns">-</span>
+      </div>
+    </div>
+    
+    <div class="currency-card" id="currencyInfo">
+      <div class="section-title">Live Exchange Rates</div>
+      <div class="info-row">
+        <span class="info-label">USD to EUR:</span>
+        <span class="rate-value" id="rateEUR">Loading...</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">USD to GBP:</span>
+        <span class="rate-value" id="rateGBP">Loading...</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">USD to CAD:</span>
+        <span class="rate-value" id="rateCAD">Loading...</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Updated:</span>
+        <span class="info-value" id="rateUpdate">-</span>
+      </div>
+    </div>
+    
+    <div id="statusMessage" class="status-message"></div>
+    
+    <div class="section-title">Quick Actions</div>
+    
+    <button class="btn btn-primary" onclick="runAnalyze()">
+      Analyze Selection
+    </button>
+    
+    <button class="btn btn-success" onclick="runFormat()">
+      Auto-Format Data
+    </button>
+    
+    <button class="btn btn-success" onclick="runFetchCurrency()">
+      Fetch Currency Rates
+    </button>
+    
+    <button class="btn btn-warning" onclick="runClean()">
+      Clean Data
+    </button>
+    
+    <button class="btn btn-danger" onclick="runRemoveDuplicates()">
+      Remove Duplicates
+    </button>
+    
+    <div class="section-title">Reports</div>
+    
+    <button class="btn btn-primary" onclick="runSummary()">
+      Create Summary Report
+    </button>
+    
+    <div class="footer">
+      <strong>Built with VS Code + clasp</strong><br>
+      Version controlled with Git
+    </div>
+  </div>
+  
+  <script>
+    // Load sheet info on startup
+    google.script.run
+      .withSuccessHandler(updateSheetInfo)
+      .getSheetInfo();
+    
+    // Load currency rates
+    google.script.run
+      .withSuccessHandler(updateCurrencyRates)
+      .getLiveCurrencyRates();
+    
+    function updateSheetInfo(info) {
+      document.getElementById('sheetName').textContent = info.sheetName;
+      document.getElementById('rows').textContent = info.rows.toLocaleString();
+      document.getElementById('columns').textContent = info.columns.toLocaleString();
+    }
+    
+    function updateCurrencyRates(data) {
+      if (data.success) {
+        document.getElementById('rateEUR').textContent = data.rates.EUR.toFixed(4);
+        document.getElementById('rateGBP').textContent = data.rates.GBP.toFixed(4);
+        document.getElementById('rateCAD').textContent = data.rates.CAD.toFixed(4);
+        document.getElementById('rateUpdate').textContent = data.lastUpdate;
+      } else {
+        document.getElementById('rateEUR').textContent = 'Error';
+        document.getElementById('rateGBP').textContent = 'Error';
+        document.getElementById('rateCAD').textContent = 'Error';
+      }
+    }
+    
+    function showStatus(message, isError = false) {
+      const statusEl = document.getElementById('statusMessage');
+      statusEl.textContent = message;
+      statusEl.className = 'status-message ' + (isError ? 'status-error' : 'status-success');
+      statusEl.style.display = 'block';
+      
+      setTimeout(() => {
+        statusEl.style.display = 'none';
+      }, 3000);
+    }
+    
+    function runAnalyze() {
+      google.script.run
+        .withSuccessHandler(() => showStatus('Analysis complete!'))
+        .withFailureHandler((error) => showStatus(error, true))
+        .analyzeSelection();
+    }
+    
+    function runFormat() {
+      google.script.run
+        .withSuccessHandler(() => {
+          showStatus('Data formatted!');
+          google.script.run.withSuccessHandler(updateSheetInfo).getSheetInfo();
+        })
+        .withFailureHandler((error) => showStatus(error, true))
+        .autoFormatData();
+    }
+    
+    function runFetchCurrency() {
+      google.script.run
+        .withSuccessHandler(() => {
+          showStatus('Currency rates fetched!');
+          google.script.run.withSuccessHandler(updateCurrencyRates).getLiveCurrencyRates();
+        })
+        .withFailureHandler((error) => showStatus(error, true))
+        .fetchCurrencyRates();
+    }
+    
+    function runClean() {
+      google.script.run
+        .withSuccessHandler(() => {
+          showStatus('Data cleaned!');
+          google.script.run.withSuccessHandler(updateSheetInfo).getSheetInfo();
+        })
+        .withFailureHandler((error) => showStatus(error, true))
+        .cleanData();
+    }
+    
+    function runRemoveDuplicates() {
+      google.script.run
+        .withSuccessHandler(() => {
+          showStatus('Duplicates removed!');
+          google.script.run.withSuccessHandler(updateSheetInfo).getSheetInfo();
+        })
+        .withFailureHandler((error) => showStatus(error, true))
+        .removeDuplicates();
+    }
+    
+    function runSummary() {
+      google.script.run
+        .withSuccessHandler(() => showStatus('Summary created!'))
+        .withFailureHandler((error) => showStatus(error, true))
+        .createSummaryReport();
+    }
+  </script>
+</body>
+</html>
